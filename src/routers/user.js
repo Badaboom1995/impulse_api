@@ -9,7 +9,7 @@ const upload = multer({});
 
 router.get("/", async (req, res) => {
   try {
-    res.status(201).send({ hello: "there" });
+    res.status(201).send({ hello: process.env.MONGODB_URL });
   } catch (e) {
     res.status(400).send(e);
   }
