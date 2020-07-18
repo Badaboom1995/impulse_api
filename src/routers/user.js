@@ -7,6 +7,14 @@ const multer = require("multer");
 const { sendWelcomeEmail, sendCancelEmail } = require("../emails/account");
 const upload = multer({});
 
+router.get("/", async (req, res) => {
+  try {
+    res.status(201).send({ hello: "there" });
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
 router.post("/users", async (req, res) => {
   const user = new User(req.body);
   console.log(req.body);
