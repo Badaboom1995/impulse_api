@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      lowecase: true,
+      lowercase: true,
       unique: true,
       trim: true,
       validate(value) {
@@ -41,8 +41,8 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-userSchema.virtual("tasks", {
-  ref: "Task",
+userSchema.virtual("challenges", {
+  ref: "Challenge",
   localField: "_id",
   foreignField: "owner"
 });
@@ -56,6 +56,7 @@ userSchema.methods.generateAuthToken = async function() {
 
   return token;
 };
+
 userSchema.methods.toJSON = function() {
   const user = this;
   const userObject = user.toObject();

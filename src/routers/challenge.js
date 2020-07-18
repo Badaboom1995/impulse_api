@@ -1,25 +1,25 @@
 const express = require("express");
 const router = new express.Router();
 const auth = require("../middleware/auth");
-const Task = require("../models/task");
+const Challenge = require("../models/challenge");
 
-router.post("/tasks", auth, async (req, res) => {
-  const task = new Task({
+router.post("/challenges", auth, async (req, res) => {
+  const challenge = new Challenge({
     ...req.body,
     owner: req.user._id
   });
   try {
-    await task.save();
-    res.status(201).send(task);
+    await challenge.save();
+    res.status(201).send(challenge);
   } catch (e) {
     res.send(e);
   }
 });
 
-// GET /tasks?completed=true
-// GET /tasks?limit=10&skip=0
-// GET /tasks?sortBy=createdAt:desc
-router.get("/tasks", auth, async (req, res) => {
+// GET /challenges?completed=true
+// GET /challenges?limit=10&skip=0
+// GET /challenges?sortBy=createdAt:desc
+router.get("/challenges", auth, async (req, res) => {
   const match = {};
   const sort = {};
   if (req.query.completed) {
@@ -32,7 +32,7 @@ router.get("/tasks", auth, async (req, res) => {
   try {
     await req.user
       .populate({
-        path: "tasks",
+        path: "challenges",
         match,
         options: {
           limit: parseInt(req.query.limit),
@@ -41,28 +41,21 @@ router.get("/tasks", auth, async (req, res) => {
         }
       })
       .execPopulate();
-    res.send(req.user.tasks);
+    res.send(req.user.challenges);
   } catch (e) {
     res.status(200).send(e);
   }
 });
 
-router.get("/tasks/:id", auth, async (req, res) => {
-  const _id = req.params.id;
-  try {
-    const task = await Task.findOne({ _id, owner: req.user._id });
-    if (!task) {
-      return res.status(404).send("Unable to find task");
-    }
-    res.send(task);
-  } catch (e) {
-    res.status(500).send(e);
-  }
-});
-
-router.patch("/task/:id", auth, async (req, res) => {
+router.patch("/challenge/:id", auth, async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdates = ["description", "completed"];
+  const allowedUpdates = [
+    "name",
+    "description",
+    "completed",
+    "action",
+    "state"
+  ];
   const isValidOperation = updates.every(update =>
     allowedUpdates.includes(update)
   );
@@ -71,31 +64,32 @@ router.patch("/task/:id", auth, async (req, res) => {
     return res.status(400).send({ error: "invalid updates" });
   }
   try {
-    const task = await Task.findOne({
+    const challenge = await Challenge.findOne({
       _id: req.params.id,
       owner: req.user._id
     });
-    updates.forEach(update => (task[update] = req.body[update]));
-    await task.save();
-    if (!task) {
-      res.status(404).send("Unable to find task");
+    updates.forEach(update => (challenge[update] = req.body[update]));
+    await challenge.save();
+    if (!challenge) {
+      res.status(404).send("Unable to find challenge");
     }
-    res.send(task);
+    res.send(challenge);
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
-router.delete("/tasks/:id", async (req, res) => {
+router.delete("/challenges/:id", auth, async (req, res) => {
   try {
-    const tasks = await Task.findOneAndDelete({
+    const challenge = await Challenge.findOneAndDelete({
       _id: req.params.id,
       owner: req.user._id
     });
-    if (!tasks) {
-      return res.status(404).send("unable to find task");
+    console.log(challenge);
+    if (!challenge) {
+      return res.status(404).send("unable to find challenge");
     }
-    res.send(tasks);
+    res.send(challenge);
   } catch (e) {
     res.send(e);
   }

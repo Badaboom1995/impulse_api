@@ -13,18 +13,7 @@ const sendWelcomeEmail = (email, name) => {
   };
   sgMail.send(msg);
 };
-const sendCancelEmail = (email, name) => {
-  const msg = {
-    to: email,
-    from: "lordalurard@gmail.com",
-    subject: "Sending with Twilio SendGrid is Fun",
-    text: `Good bbye, ${name}`,
-    html: "<strong>and easy to do anywhere, even with Node.js</strong>"
-  };
-  sgMail.send(msg);
-};
 
 module.exports = {
-  sendWelcomeEmail,
-  sendCancelEmail
+  sendWelcomeEmail
 };
