@@ -16,7 +16,7 @@ const auth = async (req, res, next) => {
     next();
   } catch (e) {
     res.status(401);
-    res.send({ error: "Please authenticate" });
+    res.send({ error: "Please authenticate", err: e });
   }
 };
 
