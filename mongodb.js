@@ -3,9 +3,6 @@ const { ObjectId, MongoClient } = require("mongodb");
 const connectionURL = process.env.MONGODB_URL;
 const databaseName = "task-manager";
 
-// const id = new ObjectId();
-// console.log(id);
-
 MongoClient.connect(
   connectionURL,
   { useNewUrlParser: true },
