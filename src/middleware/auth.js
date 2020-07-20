@@ -9,12 +9,14 @@ const auth = async (req, res, next) => {
       _id: decoded._id,
       "tokens.token": token
     });
-    if (!user) throw new Error();
+    if (!user) throw new Error("No user");
     req.token = token;
     req.user = user;
     next();
   } catch (e) {
-    res.status(401).send({ error: "Please authenticate", decoded: decoded });
+    res
+      .status(401)
+      .send({ error: "Please authenticate", decoded: decoded._id });
   }
 };
 
