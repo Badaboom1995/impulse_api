@@ -1,25 +1,25 @@
 const express = require("express");
 const router = new express.Router();
 const auth = require("../middleware/auth");
-const Challenge = require("../models/challenge");
+const Habit = require("../models/habit");
 
-router.post("/challenges", auth, async (req, res) => {
-  const challenge = new Challenge({
+router.post("/habits", auth, async (req, res) => {
+  const habit = new Habit({
     ...req.body,
     owner: req.user._id,
   });
   try {
-    await challenge.save();
-    res.status(201).send(challenge);
+    await habit.save();
+    res.status(201).send(habit);
   } catch (e) {
     res.send(e);
   }
 });
 
-// GET /challenges?completed=true
-// GET /challenges?limit=10&skip=0
-// GET /challenges?sortBy=createdAt:desc
-router.get("/challenges", auth, async (req, res) => {
+// GET /tasks?completed=true
+// GET /tasks?limit=10&skip=0
+// GET /tasks?sortBy=createdAt:desc
+router.get("/habits", auth, async (req, res) => {
   const match = {};
   const sort = {};
   if (req.query.completed) {
@@ -32,7 +32,7 @@ router.get("/challenges", auth, async (req, res) => {
   try {
     await req.user
       .populate({
-        path: "challenges",
+        path: "habits",
         match,
         options: {
           limit: parseInt(req.query.limit),
@@ -41,20 +41,35 @@ router.get("/challenges", auth, async (req, res) => {
         },
       })
       .execPopulate();
-    res.send(req.user.challenges);
+    res.send(req.user.habits);
   } catch (e) {
     res.status(200).send(e);
   }
 });
 
-router.patch("/challenge/:id", auth, async (req, res) => {
+router.get("/habit/:id", auth, async (req, res) => {
+  const _id = req.params.id;
+  try {
+    const habit = await Habit.findOne({ _id, owner: req.user._id });
+    if (!habit) {
+      return res.status(404).send("Unable to find habit");
+    }
+    res.send(habit);
+  } catch (e) {
+    res.status(500).send(e);
+  }
+});
+
+router.patch("/habit/:id", auth, async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = [
-    "name",
-    "description",
+    "duration",
     "completed",
-    "action",
     "state",
+    "name",
+    "color",
+    "repeat",
+    "time",
   ];
   const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
@@ -64,31 +79,32 @@ router.patch("/challenge/:id", auth, async (req, res) => {
     return res.status(400).send({ error: "invalid updates" });
   }
   try {
-    const challenge = await Challenge.findOne({
+    const habit = await Habit.findOne({
       _id: req.params.id,
       owner: req.user._id,
     });
-    updates.forEach((update) => (challenge[update] = req.body[update]));
-    await challenge.save();
-    if (!challenge) {
-      res.status(404).send("Unable to find challenge");
+    updates.forEach((update) => (habit[update] = req.body[update]));
+    await habit.save();
+    if (!habit) {
+      res.status(404).send("Unable to find habit");
     }
-    res.send(challenge);
+    res.send(habit);
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
-router.delete("/challenges/:id", auth, async (req, res) => {
+router.delete("/habit/:id", auth, async (req, res) => {
   try {
-    const challenge = await Challenge.findOneAndDelete({
+    const habit = await Habit.findOneAndDelete({
       _id: req.params.id,
       owner: req.user._id,
     });
-    if (!challenge) {
-      return res.status(404).send("unable to find challenge");
+    console.log("req.user._id");
+    if (!habit) {
+      return res.status(404).send("unable to find habit");
     }
-    res.send(challenge);
+    res.send(habit);
   } catch (e) {
     res.send(e);
   }

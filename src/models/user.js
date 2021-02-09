@@ -6,15 +6,16 @@ const Task = require("./task");
 
 const userSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
+    name: { type: String, trim: true },
+    new: { type: Boolean, default: true, trim: true },
     age: {
-      type: Number,
+      type: String,
       default: 0,
       validate(value) {
         if (value < 0) {
           throw new Error("Age must be a positive number");
         }
-      }
+      },
     },
     email: {
       type: String,
@@ -26,28 +27,33 @@ const userSchema = new mongoose.Schema(
         if (!validator.isEmail(value)) {
           throw new Error("Email is invalid");
         }
-      }
+      },
     },
     password: {
       type: String,
-      minlength: 7,
-      trim: true
+      minlength: 5,
+      trim: true,
     },
     tokens: [{ token: { type: String, required: true } }],
     avatar: {
-      type: Buffer
-    }
+      type: Buffer,
+    },
   },
   { timestamps: true }
 );
 
-userSchema.virtual("challenges", {
-  ref: "Challenge",
+userSchema.virtual("habits", {
+  ref: "Habit",
   localField: "_id",
-  foreignField: "owner"
+  foreignField: "owner",
+});
+userSchema.virtual("plans", {
+  ref: "Plan",
+  localField: "_id",
+  foreignField: "owner",
 });
 
-userSchema.methods.generateAuthToken = async function() {
+userSchema.methods.generateAuthToken = async function () {
   const user = this;
   const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
   user.tokens = user.tokens.concat({ token });
@@ -57,7 +63,7 @@ userSchema.methods.generateAuthToken = async function() {
   return token;
 };
 
-userSchema.methods.toJSON = function() {
+userSchema.methods.toJSON = function () {
   const user = this;
   const userObject = user.toObject();
 
@@ -72,7 +78,6 @@ userSchema.statics.findByCredentials = async (email, password) => {
   if (!user) {
     throw new Error("Unable to login");
   }
-  console.log(password, user);
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
     throw new Error("wrong passsword");
@@ -80,15 +85,15 @@ userSchema.statics.findByCredentials = async (email, password) => {
   return user;
 };
 
-userSchema.pre("save", async function(next) {
+userSchema.pre("save", async function (next) {
   const user = this;
   if (user.isModified("password")) {
-    user.password = await bcrypt.hash(user.password, 8);
+    user.password = await bcrypt.hash(user.password, 5);
   }
   next();
 });
 
-userSchema.pre("remove", async function(next) {
+userSchema.pre("remove", async function (next) {
   const user = this;
   await Task.deleteMany({ owner: user._id });
   next();

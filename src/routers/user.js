@@ -7,17 +7,8 @@ const multer = require("multer");
 const { sendWelcomeEmail, sendCancelEmail } = require("../emails/account");
 const upload = multer({});
 
-router.get("/", async (req, res) => {
-  try {
-    res.status(201).send({ hello: process.env.MONGODB_URL });
-  } catch (e) {
-    res.status(400).send(e);
-  }
-});
-
 router.post("/users", async (req, res) => {
   const user = new User(req.body);
-  console.log(req.body);
   try {
     await user.save();
     sendWelcomeEmail(user.email, user.name);
@@ -55,7 +46,6 @@ router.delete("/users/me/avatar", auth, async (req, res) => {
 router.get("/users/:id/avatar", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    console.log(user);
     if (!user || !user.avatar) {
       throw new Error();
     }
@@ -73,15 +63,19 @@ router.post("/users/login", async (req, res) => {
       req.body.password
     );
     const token = await user.generateAuthToken();
-    res.send({ user, token });
+    setTimeout(() => {
+      res.send({ user, token });
+    }, 500);
   } catch (e) {
-    res.status(400).send("error");
+    res
+      .status(400)
+      .send({ error: { status: 400, text: "Incorrect E-mail or Password" } });
   }
 });
 
 router.post("/users/logout", auth, async (req, res) => {
   try {
-    req.user.tokens = req.user.tokens.filter(token => {
+    req.user.tokens = req.user.tokens.filter((token) => {
       return token.token != req.token;
     });
     await req.user.save();
@@ -102,7 +96,6 @@ router.post("/users/logoutAll", auth, async (req, res) => {
 });
 
 router.get("/users/me", auth, async (req, res) => {
-  console.log(req);
   try {
     await res.send(req.user);
   } catch (error) {
@@ -112,8 +105,8 @@ router.get("/users/me", auth, async (req, res) => {
 
 router.patch("/users/me", auth, async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdates = ["name", "email", "password", "age"];
-  const isValidOperation = updates.every(update =>
+  const allowedUpdates = ["name", "email", "password", "age", "new"];
+  const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
   );
 
@@ -122,7 +115,7 @@ router.patch("/users/me", auth, async (req, res) => {
   }
   try {
     const user = req.user;
-    updates.forEach(update => (user[update] = req.body[update]));
+    updates.forEach((update) => (user[update] = req.body[update]));
     await user.save();
     if (!user) {
       res.status(404).send("Unable to find user");

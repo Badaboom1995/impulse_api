@@ -1,7 +1,7 @@
 const { ObjectId, MongoClient } = require("mongodb");
 
 const connectionURL = process.env.MONGODB_URL;
-const databaseName = "task-manager";
+const databaseName = "reflect";
 
 MongoClient.connect(
   connectionURL,
@@ -15,14 +15,14 @@ MongoClient.connect(
     db.collection("tasks")
       .updateMany(
         {
-          completed: false
+          completed: false,
         },
         { $set: { completed: true } }
       )
-      .then(result => {
+      .then((result) => {
         console.log(result.modifiedCount);
       })
-      .catch(error => {
+      .catch((error) => {
         console.log(error);
       });
   }

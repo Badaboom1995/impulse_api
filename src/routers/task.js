@@ -6,7 +6,7 @@ const Task = require("../models/task");
 router.post("/tasks", auth, async (req, res) => {
   const task = new Task({
     ...req.body,
-    owner: req.user._id
+    owner: req.user._id,
   });
   try {
     await task.save();
@@ -37,8 +37,8 @@ router.get("/tasks", auth, async (req, res) => {
         options: {
           limit: parseInt(req.query.limit),
           skip: parseInt(req.query.skip),
-          sort
-        }
+          sort,
+        },
       })
       .execPopulate();
     res.send(req.user.tasks);
@@ -63,7 +63,7 @@ router.get("/tasks/:id", auth, async (req, res) => {
 router.patch("/task/:id", auth, async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ["description", "completed"];
-  const isValidOperation = updates.every(update =>
+  const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
   );
 
@@ -73,9 +73,9 @@ router.patch("/task/:id", auth, async (req, res) => {
   try {
     const task = await Task.findOne({
       _id: req.params.id,
-      owner: req.user._id
+      owner: req.user._id,
     });
-    updates.forEach(update => (task[update] = req.body[update]));
+    updates.forEach((update) => (task[update] = req.body[update]));
     await task.save();
     if (!task) {
       res.status(404).send("Unable to find task");
@@ -90,7 +90,7 @@ router.delete("/tasks/:id", async (req, res) => {
   try {
     const tasks = await Task.findOneAndDelete({
       _id: req.params.id,
-      owner: req.user._id
+      owner: req.user._id,
     });
     if (!tasks) {
       return res.status(404).send("unable to find task");
